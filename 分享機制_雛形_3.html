@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CC平台 模型權限分享管理雛形</title>
+<style>
+  :root{
+    --sidebar-bg:#E1F3EE;
+    --panel-bg:#F6F7F7;
+    --main-bg:#F2FAF8;
+    --surface:#FFFFFF;
+    --surface-soft:#F8FBFA;
+    --border:#E4E7E7;
+    --text:#18181B;
+    --muted:#667085;
+    --green:#009168;
+    --green-dark:#00785A;
+    --mint:#DDF2EA;
+    --amber:#B7791F;
+    --amber-bg:#FFF7E6;
+    --red:#D92D20;
+    --red-bg:#FEF3F2;
+    --blue:#2563EB;
+    --blue-bg:#EFF6FF;
+    --black:#1B1B1D;
+    --radius:8px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Microsoft JhengHei","Noto Sans TC",system-ui,sans-serif;background:#DADDDC;color:var(--text);overflow-x:hidden}
+  button,input,select,textarea{font:inherit}
+  button{cursor:pointer}
+  svg{display:block}
+  .app-shell{display:flex;min-height:100vh;background:var(--main-bg);width:100%}
+  .icon-sidebar{width:56px;background:var(--sidebar-bg);display:flex;flex-direction:column;align-items:center;padding:16px 0;gap:8px;flex-shrink:0}
+  .logo{width:28px;height:28px;margin-bottom:14px;border-radius:0;background:transparent;color:var(--green);display:flex;align-items:center;justify-content:center;font-weight:800}
+  .nav-icon{width:44px;min-height:112px;border:0;background:transparent;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#344054;font-size:13px;font-weight:700;line-height:1.15;letter-spacing:0;writing-mode:vertical-rl;text-orientation:upright;padding:10px 0}
+  .nav-icon.active{background:#C9E8DF;color:var(--green-dark)}
+  .spacer{flex:1}
+  .avatar{width:32px;height:32px;border-radius:50%;background:#8EB7A7;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px}
+  .page{display:none;flex:1;min-width:0}
+  .page.active{display:flex}
+  .secondary-panel{width:230px;background:var(--panel-bg);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+  .secondary-header{padding:16px;border-bottom:1px solid var(--border)}
+  .secondary-header h2{font-size:16px;margin:0 0 10px}
+  .secondary-header p{font-size:12px;color:var(--muted);line-height:1.5;margin:0}
+  .search-box{padding:10px 16px}
+  .search-box input{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:7px;background:#fff;font-size:13px}
+  .side-list{list-style:none;margin:0;padding:0 8px 14px;overflow:visible}
+  .side-item{display:flex;align-items:center;gap:8px;padding:10px;border-radius:8px;font-size:13.5px;color:var(--text);border:0;background:transparent;width:100%;text-align:left}
+  .side-item.active{background:var(--black);color:#fff}
+  .side-item .count{margin-left:auto;font-size:11.5px;color:var(--muted)}
+  .side-item.active .count{color:#D0D5DD}
+  .main{flex:1;padding:24px 30px;overflow:visible;min-width:0}
+  .page-header{display:flex;align-items:flex-start;gap:12px;margin-bottom:18px}
+  .header-icon{width:30px;height:30px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  h1{font-size:23px;margin:0;font-weight:800;letter-spacing:0}
+  .subtitle{font-size:13px;color:var(--muted);margin:5px 0 0;line-height:1.5}
+  .header-actions{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+  .btn{border:1px solid var(--border);background:#fff;color:var(--text);border-radius:8px;padding:8px 13px;font-size:13px;font-weight:700}
+  .btn.primary{background:var(--green);border-color:var(--green);color:#fff}
+  .btn.primary:hover{background:var(--green-dark)}
+  .btn.danger{border-color:#FDA29B;color:var(--red)}
+  .btn.ghost{background:transparent}
+  .grid{display:grid;gap:14px}
+  .stats{grid-template-columns:repeat(4,minmax(130px,1fr));margin-bottom:18px}
+  .card,.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)}
+  .card{padding:14px 16px}
+  .label{display:block;color:var(--muted);font-size:12px;margin-bottom:6px}
+  .value{display:block;font-size:20px;font-weight:800}
+  .small{font-size:12px;color:var(--muted);line-height:1.5}
+  .layout-2{grid-template-columns:minmax(0,1.3fr) minmax(330px,.7fr)}
+  .viewer{height:390px;border-radius:10px;overflow:hidden;background:#0B1F19;position:relative;border:1px solid var(--border)}
+  .viewer::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 35%,#1D4A39,#0B1F19 70%)}
+  .terrain{position:absolute;left:50%;top:50%;width:520px;height:260px;transform:translate(-50%,-45%) rotateX(56deg) rotateZ(43deg);transform-style:preserve-3d}
+  .tile{position:absolute;width:42px;height:42px;background:#6FA25A;border:1px solid rgba(0,0,0,.15)}
+  .tile:nth-child(3n){background:#4E8C4A}.tile:nth-child(4n){background:#8FBE72}.tile:nth-child(7n){background:#C8D08B}
+  .viewer-badge{position:absolute;top:14px;left:14px;background:rgba(255,255,255,.94);border-radius:20px;padding:6px 11px;font-size:12px;color:var(--muted);z-index:2}
+  .viewer-tools{position:absolute;left:14px;bottom:14px;display:flex;background:rgba(255,255,255,.95);border-radius:9px;padding:5px;gap:3px}
+  .viewer-tools button{width:30px;height:30px;border:0;background:transparent;border-radius:7px}
+  .viewer-tools button:hover{background:var(--mint)}
+  .panel-header{display:flex;align-items:center;gap:10px;padding:15px 16px;border-bottom:1px solid var(--border)}
+  .panel-header h3{font-size:15px;margin:0}
+  .panel-body{padding:16px}
+  .access-row,.audit-row,.model-row,.decision-row{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #EEF0F1}
+  .access-row:last-child,.audit-row:last-child,.model-row:last-child,.decision-row:last-child{border-bottom:0}
+  .avatar-sm{width:32px;height:32px;border-radius:50%;background:var(--mint);color:var(--green-dark);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0}
+  .avatar-sm.group{background:#FEF3D6;color:#9A6700}
+  .row-main{min-width:0;flex:1}
+  .row-title{font-size:13.5px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .row-sub{font-size:12px;color:var(--muted);margin-top:2px}
+  .role-select{border:1px solid var(--border);border-radius:7px;padding:6px 8px;background:#fff;font-size:12.5px}
+  .tag{display:inline-flex;align-items:center;border-radius:999px;padding:3px 8px;font-size:11.5px;font-weight:700;background:#EEF2F6;color:#475467;white-space:nowrap}
+  .tag.green{background:var(--mint);color:var(--green-dark)}
+  .tag.amber{background:var(--amber-bg);color:var(--amber)}
+  .tag.red{background:var(--red-bg);color:var(--red)}
+  .tag.blue{background:var(--blue-bg);color:var(--blue)}
+  table{width:100%;border-collapse:collapse}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid #EEF0F1;font-size:13px;vertical-align:top}
+  th{font-size:12px;color:var(--muted);font-weight:800}
+  tr:last-child td{border-bottom:0}
+  .permission-table td:not(:first-child),.permission-table th:not(:first-child){text-align:center}
+  .ok{color:var(--green);font-weight:900}
+  .no{color:#98A2B3}
+  .form-line{display:flex;gap:8px;align-items:center}
+  .form-line input,.form-line select{border:1px solid var(--border);border-radius:8px;padding:9px 10px;background:#fff;font-size:13px}
+  .form-line input{flex:1;min-width:0}
+  .hint{background:var(--mint);color:#006B4F;border-radius:8px;padding:10px 12px;font-size:12.5px;line-height:1.6;margin:12px 0 0}
+  .warning{background:var(--amber-bg);color:#7A4B00;border-radius:8px;padding:10px 12px;font-size:12.5px;line-height:1.6;margin-top:12px}
+  .danger-note{background:var(--red-bg);color:#912018;border-radius:8px;padding:10px 12px;font-size:12.5px;line-height:1.6;margin-top:12px}
+  .modal-overlay{position:fixed;inset:0;background:rgba(24,24,27,.52);display:none;align-items:center;justify-content:center;padding:18px;z-index:10}
+  .modal-overlay.open{display:flex}
+  .modal{width:min(720px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:14px;box-shadow:0 16px 50px rgba(0,0,0,.28)}
+  .modal.small{width:min(430px,100%)}
+  .modal-header{display:flex;align-items:center;gap:10px;padding:17px 20px;border-bottom:1px solid var(--border)}
+  .modal-header h2{font-size:17px;margin:0}
+  .icon-btn{margin-left:auto;border:0;background:transparent;font-size:18px;color:var(--muted)}
+  .modal-body{padding:18px 20px}
+  .modal-footer{display:flex;justify-content:flex-end;gap:10px;padding:15px 20px;border-top:1px solid var(--border)}
+  .toast{position:fixed;right:22px;bottom:22px;background:#101828;color:#fff;border-radius:10px;padding:11px 14px;font-size:13px;display:none;z-index:20;box-shadow:0 10px 30px rgba(0,0,0,.2)}
+  .toast.show{display:block}
+  .dashboard-main{padding:0;overflow:visible}
+  .dashboard-frame-wrap{overflow:hidden;background:#F5F5F5}
+  .dashboard-frame{width:calc(100% + 46px);min-height:820px;margin-left:-46px;border:0;display:block;background:#F5F5F5}
+  @media(max-width:1180px){
+    body{overflow-x:hidden}
+    .layout-2{grid-template-columns:minmax(0,1fr) minmax(310px,.72fr)}
+    .stats{grid-template-columns:repeat(4,minmax(120px,1fr))}
+  }
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <nav class="icon-sidebar" aria-label="主選單">
+    <div class="logo">CC</div>
+    <button class="nav-icon" data-page="dashboard" title="統計儀表版">統計儀表版</button>
+    <button class="nav-icon active" data-page="model" title="模型分享機制">模型分享機制</button>
+    <button class="nav-icon" data-page="groups" title="權限群組管理">權限群組管理</button>
+    <div class="spacer"></div>
+    <div class="avatar">JD</div>
+  </nav>
+
+  <section class="page" id="page-dashboard">
+    <main class="main dashboard-main">
+      <div class="dashboard-frame-wrap">
+        <iframe class="dashboard-frame" src="CC_儀錶板.html" title="CC平台統計儀表板" scrolling="no"></iframe>
+      </div>
+    </main>
+  </section>
+
+  <section class="page active" id="page-model">
+    <main class="main">
+      <div class="page-header">
+        <div class="header-icon">▶</div>
+        <div>
+          <h1>任務三之一</h1>
+          <p class="subtitle">模型 · 建立於 2026/06/25 · 目前採指定帳號與群組分享，不開放公開連結</p>
+        </div>
+        <div class="header-actions">
+          <button class="btn" id="open-permission-table">角色權限表</button>
+          <button class="btn primary" id="open-share">共用</button>
+        </div>
+      </div>
+
+      <div class="grid stats">
+        <div class="card"><span class="label">圖片數量</span><span class="value">970</span></div>
+        <div class="card"><span class="label">存取對象</span><span class="value" id="access-count">4</span></div>
+        <div class="card"><span class="label">外部帳號</span><span class="value" id="external-count">1</span></div>
+        <div class="card"><span class="label">最近異動</span><span class="value" style="font-size:16px">2026/07/06</span></div>
+      </div>
+
+      <div class="grid layout-2">
+        <div class="grid">
+          <div class="viewer" aria-label="模型檢視示意">
+            <div class="viewer-badge">示意圖・未來嵌入 3D 模型檢視器 iframe</div>
+            <div class="terrain" id="terrain"></div>
+            <div class="viewer-tools">
+              <button title="縮小">－</button><button title="放大">＋</button><button title="重置">↺</button><button title="圖層">▦</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid">
+          <div class="panel">
+            <div class="panel-header">
+              <h3>具有存取權</h3>
+              <span class="tag green">指定分享</span>
+            </div>
+            <div class="panel-body" id="access-list"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <h3>權限異動紀錄</h3>
+              <span class="tag blue">雛形資料</span>
+            </div>
+            <div class="panel-body" id="audit-list"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </section>
+
+  <section class="page" id="page-groups">
+    <aside class="secondary-panel">
+      <div class="secondary-header">
+        <h2>群組管理</h2>
+        <button class="btn primary" id="open-group-modal" style="width:100%">新增群組</button>
+      </div>
+      <div class="search-box"><input id="group-search" placeholder="搜尋群組名稱"></div>
+      <ul class="side-list" id="group-list"></ul>
+    </aside>
+    <main class="main">
+      <div id="group-detail"></div>
+    </main>
+  </section>
+
+</div>
+
+<div class="modal-overlay" id="share-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>共用「任務三之一」</h2>
+      <button class="icon-btn" data-close="share-modal">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-line">
+        <input id="share-target" placeholder="輸入使用者 Email 或群組名稱，例如 reviewer@example.com / 工程團隊">
+        <select id="share-role">
+          <option value="檢視者">檢視者</option>
+          <option value="下載者">下載者</option>
+          <option value="協作者">協作者</option>
+          <option value="管理者">管理者</option>
+        </select>
+        <button class="btn primary" id="add-access">加入</button>
+      </div>
+      <div class="hint">預計做法：一般使用者可分享給內部帳號與既有群組；外部帳號預設標記為「待審核」，是否自動寄送邀請信需與甲方確認。</div>
+      <div id="modal-access-list" style="margin-top:12px"></div>
+      <div class="warning">待確認：是否允許公開連結、是否要設定有效期限、下載權限是否要獨立於檢視權限。</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" data-close="share-modal">取消</button>
+      <button class="btn primary" id="save-share">完成</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="permission-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>角色權限表</h2>
+      <button class="icon-btn" data-close="permission-modal">×</button>
+    </div>
+    <div class="modal-body">
+      <table class="permission-table">
+        <thead><tr><th>功能</th><th>檢視者</th><th>下載者</th><th>協作者</th><th>管理者</th><th>擁有者</th></tr></thead>
+        <tbody>
+          <tr><td>檢視模型</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td></tr>
+          <tr><td>下載成果</td><td class="no">—</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td></tr>
+          <tr><td>編輯模型資訊</td><td class="no">—</td><td class="no">—</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td></tr>
+          <tr><td>新增分享對象</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="ok">✓</td><td class="ok">✓</td></tr>
+          <tr><td>移除他人權限</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="ok">✓</td><td class="ok">✓</td></tr>
+          <tr><td>刪除模型</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="ok">✓</td></tr>
+        </tbody>
+      </table>
+      <div class="warning">待確認：甲方是否需要「下載者」獨立角色；若不需要，可併入檢視者並以模型設定控制下載。</div>
+    </div>
+    <div class="modal-footer"><button class="btn primary" data-close="permission-modal">關閉</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="group-modal">
+  <div class="modal small">
+    <div class="modal-header">
+      <h2>新增群組</h2>
+      <button class="icon-btn" data-close="group-modal">×</button>
+    </div>
+    <div class="modal-body">
+      <label class="label" for="group-name">群組名稱</label>
+      <input id="group-name" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px" placeholder="例如：外部審查委員">
+      <div class="hint">群組是批次授權工具，不等同於組織部門。是否要串接既有 LDAP / AD 群組需另行確認。</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" data-close="group-modal">取消</button>
+      <button class="btn primary" id="create-group">建立</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="confirm-modal">
+  <div class="modal small">
+    <div class="modal-header">
+      <h2 id="confirm-title">確認</h2>
+      <button class="icon-btn" data-close="confirm-modal">×</button>
+    </div>
+    <div class="modal-body"><p id="confirm-message" style="font-size:13.5px;line-height:1.7;margin:0"></p></div>
+    <div class="modal-footer">
+      <button class="btn" data-close="confirm-modal">取消</button>
+      <button class="btn danger" id="confirm-ok">確認</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const roles = {
+    '檢視者':'可查看模型，不可下載或再分享',
+    '下載者':'可查看與下載成果，不可編輯',
+    '協作者':'可查看、下載與編輯模型資訊',
+    '管理者':'可管理分享對象與群組授權',
+    '擁有者':'完整權限，不可被一般管理者移除'
+  };
+  let accessList = [
+    {type:'user', name:'John Doe（你）', contact:'john.doe@example.com', role:'擁有者', status:'內部帳號'},
+    {type:'user', name:'Jane Doe', contact:'jane.doe@example.com', role:'管理者', status:'內部帳號'},
+    {type:'group', name:'工程團隊', contact:'組織群組 · 4 人', role:'協作者', status:'群組'},
+    {type:'user', name:'甲方審查窗口', contact:'reviewer@example.com', role:'檢視者', status:'外部待審核'}
+  ];
+  let audits = [
+    {actor:'John Doe', action:'新增外部檢視者 reviewer@example.com', time:'2026/07/06 10:20'},
+    {actor:'Jane Doe', action:'將工程團隊角色調整為協作者', time:'2026/07/03 16:42'},
+    {actor:'系統', action:'記錄模型由私有狀態改為指定分享', time:'2026/06/25 09:18'}
+  ];
+  let groups = [
+    {name:'工程團隊', createdBy:'John Doe', createdAt:'2026/06/24', sharedModels:['任務三之一','任務三之二'], members:[
+      {name:'John Doe（建立者）', mail:'john.doe@example.com', addedBy:'-', addedAt:'2026/06/24', removable:false},
+      {name:'Jane Doe', mail:'jane.doe@example.com', addedBy:'John Doe', addedAt:'2026/06/25', removable:true},
+      {name:'Alex Doe', mail:'alex.doe@example.com', addedBy:'Jane Doe', addedAt:'2026/06/28', removable:true},
+      {name:'Casey Doe', mail:'casey.doe@example.com', addedBy:'John Doe', addedAt:'2026/07/01', removable:true}
+    ]},
+    {name:'外部協作夥伴', createdBy:'John Doe', createdAt:'2026/06/20', sharedModels:['測試模型'], members:[
+      {name:'John Doe（建立者）', mail:'john.doe@example.com', addedBy:'-', addedAt:'2026/06/20', removable:false},
+      {name:'甲方審查窗口', mail:'reviewer@example.com', addedBy:'John Doe', addedAt:'2026/07/06', removable:true}
+    ]},
+    {name:'測試群組', createdBy:'John Doe', createdAt:'2026/07/01', sharedModels:[], members:[
+      {name:'John Doe（建立者）', mail:'john.doe@example.com', addedBy:'-', addedAt:'2026/07/01', removable:false}
+    ]}
+  ];
+  let activeGroup = 0;
+  let pendingConfirm = null;
+
+  function today(){
+    const d = new Date();
+    return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
+  }
+  function toast(message){
+    const el = document.getElementById('toast');
+    el.textContent = message;
+    el.classList.add('show');
+    setTimeout(()=>el.classList.remove('show'),1800);
+  }
+  function openModal(id){document.getElementById(id).classList.add('open')}
+  function closeModal(id){document.getElementById(id).classList.remove('open')}
+  function initials(text){return text.replace(/[（(].*?[）)]/g,'').trim()[0] || '?'}
+  function roleOptions(current){
+    return Object.keys(roles).filter(r=>r!=='擁有者').map(r=>`<option ${r===current?'selected':''}>${r}</option>`).join('');
+  }
+  function renderTerrain(){
+    const root = document.getElementById('terrain');
+    root.innerHTML = '';
+    let i = 0;
+    for(let y=0;y<6;y++){
+      for(let x=0;x<12;x++){
+        const t = document.createElement('div');
+        t.className = 'tile';
+        t.style.left = `${x*42 + (y%2)*21}px`;
+        t.style.top = `${y*42}px`;
+        t.style.transform = `translateZ(${((x+y)%4)*8}px)`;
+        t.style.opacity = `${0.76 + (i%5)*0.04}`;
+        root.appendChild(t);
+        i++;
+      }
+    }
+  }
+  function renderAccess(){
+    const rows = accessList.map((a,i)=>`
+      <div class="access-row">
+        <div class="avatar-sm ${a.type==='group'?'group':''}">${a.type==='group'?'組':initials(a.name)}</div>
+        <div class="row-main">
+          <div class="row-title">${a.name}</div>
+          <div class="row-sub">${a.contact} · ${roles[a.role] || '完整權限'}</div>
+        </div>
+        <span class="tag ${a.status.includes('外部')?'amber':a.status==='群組'?'blue':'green'}">${a.status}</span>
+        ${a.role==='擁有者'
+          ? '<span class="tag green">擁有者</span>'
+          : `<select class="role-select" onchange="changeRole(${i},this.value)">${roleOptions(a.role)}</select><button class="btn ghost danger" onclick="confirmRemoveAccess(${i})">移除</button>`}
+      </div>`).join('');
+    document.getElementById('access-list').innerHTML = rows;
+    document.getElementById('modal-access-list').innerHTML = rows;
+    document.getElementById('access-count').textContent = accessList.length;
+    document.getElementById('external-count').textContent = accessList.filter(a=>a.status.includes('外部')).length;
+  }
+  function renderAudit(){
+    document.getElementById('audit-list').innerHTML = audits.map(a=>`
+      <div class="audit-row">
+        <div class="avatar-sm">${initials(a.actor)}</div>
+        <div class="row-main"><div class="row-title">${a.action}</div><div class="row-sub">${a.actor} · ${a.time}</div></div>
+      </div>`).join('');
+  }
+  function changeRole(i,role){
+    accessList[i].role = role;
+    audits.unshift({actor:'John Doe', action:`將 ${accessList[i].name} 角色調整為 ${role}`, time:`${today()} 目前時間`});
+    renderAccess();renderAudit();toast('角色已更新');
+  }
+  function confirmRemoveAccess(i){
+    pendingConfirm = () => {
+      const removed = accessList.splice(i,1)[0];
+      audits.unshift({actor:'John Doe', action:`移除 ${removed.name} 的模型存取權`, time:`${today()} 目前時間`});
+      renderAccess();renderAudit();toast('存取權已移除');
+    };
+    document.getElementById('confirm-title').textContent = '移除存取權';
+    document.getElementById('confirm-message').textContent = `確定要移除「${accessList[i].name}」對此模型的存取權嗎？`;
+    openModal('confirm-modal');
+  }
+  function addAccess(){
+    const target = document.getElementById('share-target').value.trim();
+    const role = document.getElementById('share-role').value;
+    if(!target){toast('請先輸入分享對象');return}
+    if(accessList.some(a=>a.contact===target || a.name===target)){toast('此對象已在存取清單');return}
+    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(target);
+    const isExternal = isEmail && !target.endsWith('@example.com');
+    accessList.push({
+      type:isEmail?'user':'group',
+      name:isEmail?target.split('@')[0]:target,
+      contact:isEmail?target:'組織群組 · 待同步人數',
+      role,
+      status:isExternal?'外部待審核':isEmail?'內部帳號':'群組'
+    });
+    audits.unshift({actor:'John Doe', action:`新增 ${target} 為 ${role}`, time:`${today()} 目前時間`});
+    document.getElementById('share-target').value = '';
+    renderAccess();renderAudit();toast(isExternal?'已加入，標記為外部待審核':'已加入分享清單');
+  }
+  function renderGroups(){
+    const q = document.getElementById('group-search').value.trim();
+    const list = groups.map((g,i)=>({g,i})).filter(x=>!q || x.g.name.includes(q));
+    document.getElementById('group-list').innerHTML = list.map(({g,i})=>`
+      <li><button class="side-item ${i===activeGroup?'active':''}" onclick="selectGroup(${i})">${g.name}<span class="count">${g.members.length}人</span></button></li>
+    `).join('') || '<li class="small" style="padding:10px">查無群組</li>';
+    renderGroupDetail();
+  }
+  function selectGroup(i){activeGroup=i;renderGroups()}
+  function renderGroupDetail(){
+    const g = groups[activeGroup];
+    if(!g){document.getElementById('group-detail').innerHTML='<p class="small">目前沒有群組。</p>';return}
+    const rows = g.members.map((m,i)=>`
+      <tr>
+        <td><div class="access-row" style="padding:0;border:0"><div class="avatar-sm">${initials(m.name)}</div><div><div class="row-title">${m.name}</div><div class="row-sub">${m.mail}</div></div></div></td>
+        <td>${m.addedBy}</td><td>${m.addedAt}</td>
+        <td>${m.removable?`<button class="btn ghost danger" onclick="removeMember(${i})">移除</button>`:'<span class="tag green">建立者</span>'}</td>
+      </tr>`).join('');
+    document.getElementById('group-detail').innerHTML = `
+      <div class="page-header">
+        <div class="header-icon">●</div>
+        <div><h1>${g.name}</h1><p class="subtitle">組織群組 · 由 ${g.createdBy} 建立於 ${g.createdAt}</p></div>
+        <div class="header-actions"><button class="btn danger" onclick="confirmDeleteGroup()">刪除群組</button></div>
+      </div>
+      <div class="grid stats">
+        <div class="card"><span class="label">成員數量</span><span class="value">${g.members.length} 人</span></div>
+        <div class="card"><span class="label">已分享模型</span><span class="value">${g.sharedModels.length} 個</span></div>
+        <div class="card"><span class="label">建立日期</span><span class="value" style="font-size:16px">${g.createdAt}</span></div>
+        <div class="card"><span class="label">群組來源</span><span class="value" style="font-size:16px">平台自建</span></div>
+      </div>
+      <div class="grid layout-2">
+        <div class="panel">
+          <div class="panel-header"><h3>群組成員</h3></div>
+          <div class="panel-body">
+            <div class="form-line" style="margin-bottom:12px">
+              <input id="member-email" placeholder="輸入 Email 邀請成員">
+              <button class="btn primary" onclick="addMember()">新增</button>
+            </div>
+            <table><thead><tr><th>使用者</th><th>加入者</th><th>加入日期</th><th></th></tr></thead><tbody>${rows}</tbody></table>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><h3>影響範圍</h3><span class="tag amber">刪除前確認</span></div>
+          <div class="panel-body">
+            ${(g.sharedModels.length?g.sharedModels:['目前未套用於任何模型']).map(m=>`<div class="model-row"><div class="row-main"><div class="row-title">${m}</div><div class="row-sub">刪除群組會同步移除此模型的群組授權</div></div></div>`).join('')}
+            <div class="warning">待確認：刪除群組時，是否只移除群組授權，或也要保留原成員的個人權限。</div>
+          </div>
+        </div>
+      </div>`;
+  }
+  function addMember(){
+    const input = document.getElementById('member-email');
+    const email = input.value.trim();
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){toast('請輸入正確 Email');return}
+    const g = groups[activeGroup];
+    if(g.members.some(m=>m.mail===email)){toast('此成員已在群組內');return}
+    g.members.push({name:email.split('@')[0],mail:email,addedBy:'John Doe',addedAt:today(),removable:true});
+    input.value = '';
+    renderGroups();toast('成員已新增');
+  }
+  function removeMember(i){
+    const g = groups[activeGroup];
+    const removed = g.members.splice(i,1)[0];
+    renderGroups();toast(`已移除 ${removed.name}`);
+  }
+  function confirmDeleteGroup(){
+    const g = groups[activeGroup];
+    pendingConfirm = () => {
+      groups.splice(activeGroup,1);
+      activeGroup = Math.max(0,activeGroup-1);
+      renderGroups();toast('群組已刪除');
+    };
+    document.getElementById('confirm-title').textContent = '刪除群組';
+    document.getElementById('confirm-message').textContent = `確定刪除「${g.name}」？此群組目前套用於 ${g.sharedModels.length} 個模型，刪除後會從這些模型移除群組授權。`;
+    openModal('confirm-modal');
+  }
+  function resizeDashboardFrame(){
+    const frame = document.querySelector('.dashboard-frame');
+    if(!frame || !frame.contentDocument) return;
+    const doc = frame.contentDocument;
+    const height = Math.max(
+      doc.body ? doc.body.scrollHeight : 0,
+      doc.documentElement ? doc.documentElement.scrollHeight : 0,
+      820
+    );
+    frame.style.height = `${height}px`;
+  }
+  document.querySelectorAll('.nav-icon').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('.nav-icon').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(`page-${btn.dataset.page}`).classList.add('active');
+      if(btn.dataset.page === 'dashboard') setTimeout(resizeDashboardFrame, 80);
+    });
+  });
+  document.querySelectorAll('[data-close]').forEach(btn=>btn.addEventListener('click',()=>closeModal(btn.dataset.close)));
+  document.getElementById('open-share').addEventListener('click',()=>openModal('share-modal'));
+  document.getElementById('open-permission-table').addEventListener('click',()=>openModal('permission-modal'));
+  document.getElementById('open-group-modal').addEventListener('click',()=>openModal('group-modal'));
+  document.getElementById('add-access').addEventListener('click',addAccess);
+  document.getElementById('save-share').addEventListener('click',()=>{closeModal('share-modal');toast('分享設定已儲存')});
+  document.getElementById('group-search').addEventListener('input',renderGroups);
+  document.getElementById('create-group').addEventListener('click',()=>{
+    const input = document.getElementById('group-name');
+    const name = input.value.trim();
+    if(!name){toast('請輸入群組名稱');return}
+    groups.push({name,createdBy:'John Doe',createdAt:today(),sharedModels:[],members:[
+      {name:'John Doe（建立者）',mail:'john.doe@example.com',addedBy:'-',addedAt:today(),removable:false}
+    ]});
+    activeGroup = groups.length-1;
+    input.value = '';
+    closeModal('group-modal');
+    renderGroups();toast('群組已建立');
+  });
+  document.getElementById('confirm-ok').addEventListener('click',()=>{
+    if(pendingConfirm) pendingConfirm();
+    pendingConfirm = null;
+    closeModal('confirm-modal');
+  });
+  document.getElementById('share-target').addEventListener('keydown',e=>{if(e.key==='Enter')addAccess()});
+  document.querySelector('.dashboard-frame').addEventListener('load',()=>{
+    resizeDashboardFrame();
+    setTimeout(resizeDashboardFrame, 250);
+  });
+  window.addEventListener('resize',resizeDashboardFrame);
+
+  renderTerrain();
+  renderAccess();
+  renderAudit();
+  renderGroups();
+</script>
+</body>
+</html>
