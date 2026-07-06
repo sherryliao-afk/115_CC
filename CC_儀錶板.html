@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CC 建模平台 — 儀表板</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --sb:#72C8AF;
+  --acc:#4CB89E;
+  --page:#F5F5F5;
+  --card:#FFFFFF;
+  --border:#E5E5E5;
+  --text:#1A1A1A;
+  --sub:#6E7780;
+  --at:#5B6DB8;
+  --at-bg:#EDEFFE;
+  --warn:#D48F1A;
+  --warn-bg:#FEF6E4;
+  --done:#3DAE8E;
+  --done-bg:#E6F7F2;
+  --fail:#C94040;
+  --fail-bg:#FDEDED;
+}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang TC','Microsoft JhengHei',sans-serif;
+  background:var(--page);color:var(--text);
+  display:flex;min-height:100vh;height:auto;overflow:visible;font-size:14px;
+}
+
+/* ══ 窄色條側邊欄 ══ */
+.sb{
+  width:46px;background:var(--sb);
+  display:flex;flex-direction:column;align-items:center;
+  padding:12px 0;flex-shrink:0;z-index:10;
+}
+.sb-logo{margin-bottom:20px;padding:6px}
+.sb-nav{display:flex;flex-direction:column;align-items:center;gap:3px;flex:1}
+.ni{
+  width:38px;height:38px;border-radius:7px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;color:rgba(0,0,0,0.45);transition:all .15s;
+}
+.ni:hover{background:rgba(255,255,255,0.3);color:rgba(0,0,0,0.7)}
+.ni.on{background:rgba(255,255,255,0.85);color:var(--acc)}
+.sb-foot{display:flex;flex-direction:column;align-items:center;gap:4px}
+.av{
+  width:30px;height:30px;border-radius:50%;
+  background:rgba(255,255,255,0.3);color:rgba(0,0,0,0.6);
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:700;cursor:pointer;margin-top:4px;
+  border:1.5px solid rgba(255,255,255,0.5);
+}
+
+
+
+/* ══ 主體 ══ */
+.main{flex:1;display:flex;flex-direction:column;overflow:visible;min-width:0}
+
+/* ══ 頂部列 ══ */
+.tb{
+  background:var(--card);border-bottom:1px solid var(--border);
+  height:50px;padding:0 22px;
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+}
+.bc{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--sub)}
+.bc-now{color:var(--text);font-weight:500}
+.tb-r{display:flex;align-items:center;gap:10px}
+.upd{font-size:12px;color:#B0B5BC}
+.btn-r{
+  display:none;align-items:center;gap:5px;
+  padding:6px 14px;border:none;border-radius:5px;
+  background:var(--acc);font-size:12px;color:#fff;cursor:pointer;
+  font-weight:500;transition:background .15s;
+}
+.btn-r:hover{background:var(--done)}
+
+/* 角色切換 */
+.rtog{display:flex;background:var(--page);border-radius:7px;padding:3px;border:1px solid var(--border)}
+.rb{
+  padding:5px 14px;border-radius:5px;font-size:12.5px;
+  border:none;cursor:pointer;background:transparent;color:var(--sub);
+}
+.rb.on{background:#fff;color:var(--text);font-weight:500;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+
+/* ══ 內容區 ══ */
+.ct{flex:1;overflow:visible;padding:20px 22px 40px}
+
+/* ══ Section label ══ */
+.sec{display:flex;align-items:center;gap:10px;margin:26px 0 14px}
+.sec:first-child{margin-top:0}
+.sec-l{font-size:11px;font-weight:700;letter-spacing:.1em;color:#B0B5BC;text-transform:uppercase;white-space:nowrap}
+.sec-d{flex:1;height:1px;background:var(--border)}
+
+/* ══ Grid ══ */
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:14px}
+.g2{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:14px}
+.g1{margin-bottom:14px}
+
+/* ══ 卡片 ══ */
+.card{background:var(--card);border-radius:7px;border:1px solid var(--border);padding:16px 18px}
+
+/* ══ KPI ══ */
+.kl{font-size:12px;color:var(--sub);margin-bottom:7px}
+.kv{font-size:30px;font-weight:700;line-height:1;margin-bottom:5px}
+.ks{font-size:11.5px;color:#B0B5BC}
+.kv.c-pend{color:var(--sub)}
+.kv.c-run{color:var(--warn)}
+.kv.c-done{color:var(--done)}
+.kv.c-fail{color:var(--fail)}
+
+/* ══ 進度條 ══ */
+.pb-bg{height:6px;background:#C8EDE7;border-radius:3px;overflow:hidden}
+.pb-fill{height:100%;border-radius:3px}
+.f-at{background:var(--at)}
+.f-mod{background:var(--acc)}
+
+/* ══ 運算進度區塊 ══ */
+.prog-block{background:var(--page);border-radius:5px;padding:11px 20px;border:1px solid var(--border)}
+.prog-row{display:grid;grid-template-columns:1fr 1fr;gap:30px}
+.prog-item{display:flex;flex-direction:column;gap:6px}
+.prog-head{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--sub)}
+.prog-circle{width:14px;height:14px;border-radius:50%;border:2px solid #CCC;flex-shrink:0}
+.prog-circle.c-at{border-color:var(--at)}
+.prog-circle.c-mod{border-color:var(--acc)}
+
+/* ══ 表格 ══ */
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{
+  text-align:left;font-size:11px;font-weight:600;color:#B0B5BC;
+  padding:7px 12px;border-bottom:1px solid var(--border);
+  letter-spacing:.04em;text-transform:uppercase;
+}
+.tbl td{padding:10px 12px;border-bottom:1px solid #F3F3F3;vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:#FAFAFA}
+.tn{font-weight:500;font-size:13.5px}
+.tsub{font-size:11.5px;color:#B0B5BC;margin-top:2px}
+.tprog{min-width:130px}
+
+/* ══ 失敗率卡 ══ */
+.fc{display:flex;align-items:flex-start;gap:13px}
+.fi{width:36px;height:36px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.fi-at{background:var(--at-bg);color:var(--at)}
+.fi-mod{background:var(--done-bg);color:var(--done)}
+.fl{font-size:12px;color:var(--sub);margin-bottom:4px}
+.fv{font-size:24px;font-weight:700;color:var(--done)}
+.fd{font-size:11.5px;color:#B0B5BC;margin-top:4px}
+
+/* ══ 圖表卡 ══ */
+.cc{background:var(--card);border-radius:7px;border:1px solid var(--border);padding:18px 18px 14px}
+.ct2{font-size:14px;font-weight:600;margin-bottom:3px}
+.cs2{font-size:11.5px;color:var(--sub);margin-bottom:14px}
+.cw{position:relative;height:190px}
+
+/* ══ 配額 ══ */
+.qtag{font-size:10px;padding:2px 7px;background:var(--warn-bg);color:#9A6800;border-radius:3px;font-weight:500}
+.qrow{display:flex;align-items:center;justify-content:space-between;padding:9px 11px;background:var(--page);border-radius:5px;margin-bottom:7px;border:1px solid var(--border)}
+.qrow:last-child{margin-bottom:0}
+.qk{font-size:12px;color:var(--sub)}
+.qv{font-size:13px;font-weight:500}
+.qtbd{color:#C0C5CC;font-style:italic;font-size:12px}
+
+/* ══ Legend ══ */
+.leg{display:flex;flex-direction:column;gap:8px;margin-left:16px}
+.leg-r{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text)}
+.leg-d{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+
+/* ══ 視角切換 ══ */
+.view{display:none}
+.view.active{display:block}
+</style>
+</head>
+<body>
+
+<!-- ══ 窄色條 ══ -->
+<aside class="sb">
+  <div class="sb-logo">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+      <polygon points="12,2 22,20 2,20" fill="none" stroke="rgba(0,0,0,0.5)" stroke-width="2" stroke-linejoin="round"/>
+      <polygon points="12,8 18,20 6,20" fill="rgba(0,0,0,0.2)"/>
+    </svg>
+  </div>
+  <nav class="sb-nav">
+    <div class="ni on" title="儀表板">
+      <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24">
+        <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+        <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+      </svg>
+    </div>
+    <div class="ni" title="影像庫">
+      <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24">
+        <rect x="3" y="7" width="18" height="13" rx="2"/><path d="M3 10h18M8 4l1.5 3M16 4l-1.5 3"/>
+      </svg>
+    </div>
+    <div class="ni" title="我的專案">
+      <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24">
+        <path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/>
+      </svg>
+    </div>
+  </nav>
+  <div class="sb-foot">
+    <div class="ni" title="設定">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+      </svg>
+    </div>
+    <div class="ni" title="登出">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24">
+        <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+      </svg>
+    </div>
+    <div class="av">JD</div>
+  </div>
+</aside>
+
+
+
+<!-- ══ 主體 ══ -->
+<main class="main">
+  <header class="tb">
+    <div class="bc">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--acc)" stroke-width="2.2">
+        <polygon points="12,2 22,20 2,20" fill="none"/>
+      </svg>
+      <span>CC 建模平台</span>
+      <span style="color:#D0D3D8">›</span>
+      <span class="bc-now">儀表板</span>
+    </div>
+    <div class="tb-r">
+      <div class="rtog">
+        <button class="rb on" id="btnUser" onclick="setRole('user')">使用者視角</button>
+        <button class="rb" id="btnAdmin" onclick="setRole('admin')">管理員視角</button>
+      </div>
+      <span class="upd" id="updT">最後更新：2026/06/23 14:35</span>
+      <button class="btn-r" id="refBtn" onclick="doRef()">
+        <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>
+        </svg>重新整理
+      </button>
+    </div>
+  </header>
+
+  <div class="ct">
+
+    <!-- ╔══════════════╗ -->
+    <!-- ║  使用者視角   ║ -->
+    <!-- ╚══════════════╝ -->
+    <div class="view active" id="viewUser">
+
+      <div class="sec"><span class="sec-l">我的概況</span><div class="sec-d"></div></div>
+
+      <div class="g4">
+        <div class="card"><div class="kl">待提交</div><div class="kv c-pend">2</div><div class="ks">尚未開始運算</div></div>
+        <div class="card"><div class="kl">執行中</div><div class="kv c-run">3</div><div class="ks">正在處理中</div></div>
+        <div class="card"><div class="kl">已完成</div><div class="kv c-done">18</div><div class="ks">累計成功任務</div></div>
+        <div class="card"><div class="kl">失敗</div><div class="kv c-fail">1</div><div class="ks">需要重新處理</div></div>
+      </div>
+
+      <!-- 執行中任務進度 -->
+      <div class="card g1">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <div>
+            <div style="font-size:14px;font-weight:600">執行中任務進度</div>
+            <div style="font-size:12px;color:var(--sub);margin-top:2px">點擊重新整理以更新進度</div>
+          </div>
+        </div>
+        <table class="tbl">
+          <thead><tr>
+            <th>任務名稱</th><th>運算進度</th><th>影像數</th><th>建立時間</th><th>已耗時</th>
+          </tr></thead>
+          <tbody>
+            <tr>
+              <td><div class="tn">SITE_A_0623</div><div class="tsub">TEST 相簿</div></td>
+              <td style="min-width:280px">
+                <div class="prog-block"><div class="prog-row">
+                  <div class="prog-item">
+                    <div class="prog-head"><div class="prog-circle c-at"></div><span>空中三角重建</span><span style="margin-left:auto;color:var(--at);font-weight:600">75%</span></div>
+                    <div class="pb-bg"><div class="pb-fill f-at" style="width:75%"></div></div>
+                  </div>
+                  <div class="prog-item">
+                    <div class="prog-head"><div class="prog-circle c-mod"></div><span>模型生成</span><span style="margin-left:auto;color:#BBBBBB">等待中</span></div>
+                    <div class="pb-bg"><div class="pb-fill f-mod" style="width:0%"></div></div>
+                  </div>
+                </div></div>
+              </td>
+              <td>352</td><td style="color:var(--sub);font-size:12px">06/23 09:12</td><td style="color:var(--sub);font-size:12px">5h 23m</td>
+            </tr>
+            <tr>
+              <td><div class="tn">MOUNTAIN_3D_0620</div><div class="tsub">北部測區 相簿</div></td>
+              <td style="min-width:280px">
+                <div class="prog-block"><div class="prog-row">
+                  <div class="prog-item">
+                    <div class="prog-head"><div class="prog-circle c-at" style="border-color:var(--done);background:var(--done-bg)"></div><span>空中三角重建</span><span style="margin-left:auto;color:var(--done);font-weight:600">完成 ✓</span></div>
+                    <div class="pb-bg"><div class="pb-fill f-at" style="width:100%"></div></div>
+                  </div>
+                  <div class="prog-item">
+                    <div class="prog-head"><div class="prog-circle c-mod"></div><span>模型生成</span><span style="margin-left:auto;color:var(--acc);font-weight:600">35%</span></div>
+                    <div class="pb-bg"><div class="pb-fill f-mod" style="width:35%"></div></div>
+                  </div>
+                </div></div>
+              </td>
+              <td>614</td><td style="color:var(--sub);font-size:12px">06/20 14:30</td><td style="color:var(--sub);font-size:12px">3天 2h</td>
+            </tr>
+            <tr>
+              <td><div class="tn">COAST_SURVEY_07</div><div class="tsub">西部沿海 相簿</div></td>
+              <td style="min-width:280px">
+                <div class="prog-block"><div class="prog-row">
+                  <div class="prog-item">
+                    <div class="prog-head"><div class="prog-circle c-at"></div><span>空中三角重建</span><span style="margin-left:auto;color:var(--at);font-weight:600">15%</span></div>
+                    <div class="pb-bg"><div class="pb-fill f-at" style="width:15%"></div></div>
+                  </div>
+                  <div class="prog-item">
+                    <div class="prog-head"><div class="prog-circle c-mod"></div><span>模型生成</span><span style="margin-left:auto;color:#BBBBBB">等待中</span></div>
+                    <div class="pb-bg"><div class="pb-fill f-mod" style="width:0%"></div></div>
+                  </div>
+                </div></div>
+              </td>
+              <td>228</td><td style="color:var(--sub);font-size:12px">06/23 13:05</td><td style="color:var(--sub);font-size:12px">1h 30m</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 儲存用量 -->
+      <div class="card g1">
+        <div style="font-size:14px;font-weight:600;margin-bottom:3px">儲存用量</div>
+        <div style="font-size:12px;color:var(--sub);margin-bottom:14px">影像庫實際佔用空間</div>
+        <div style="font-size:30px;font-weight:700;color:var(--warn)">
+          <span style="font-size:14px;font-weight:500;color:var(--sub)">已使用</span>&nbsp;23.4
+          <span style="font-size:14px;font-weight:400;color:#C0C5CC">GB</span>
+        </div>
+        <div style="font-size:12px;color:var(--sub);margin-top:7px">共 847 張影像・14 個相簿</div>
+      </div>
+
+      <!-- 我的方案 -->
+      <div class="sec"><span class="sec-l">我的方案</span><div class="sec-d"></div></div>
+
+      <div class="g2" style="margin-bottom:0">
+        <!-- 方案內容 -->
+        <div class="card" style="display:flex;flex-direction:column">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px">
+            <div>
+              <span style="font-size:11px;font-weight:700;letter-spacing:.06em;padding:3px 8px;background:var(--done-bg);color:var(--done);border-radius:3px;text-transform:uppercase;display:inline-block;margin-bottom:8px">目前方案</span>
+              <div style="font-size:19px;font-weight:700">標準方案</div>
+              <div style="font-size:12px;color:var(--sub);margin-top:3px">適合個人研究與小型專案</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:22px;font-weight:700">NT$ 2,000</div>
+              <div style="font-size:11px;color:#B0B5BC">/ 月</div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;flex:1">
+            <div style="font-size:11.5px;font-weight:600;color:#B0B5BC;margin-bottom:2px">方案內容</div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:13px"><svg width="14" height="14" fill="none" stroke="var(--done)" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>儲存空間 <strong>50 GB</strong></div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:13px"><svg width="14" height="14" fill="none" stroke="var(--done)" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>每月建模次數 <strong>10 次</strong></div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:13px"><svg width="14" height="14" fill="none" stroke="var(--done)" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>單次最多影像 <strong>500 張</strong></div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:13px"><svg width="14" height="14" fill="none" stroke="var(--done)" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>標準運算資源優先佇列</div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#C0C5CC"><svg width="14" height="14" fill="none" stroke="#C0C5CC" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>高優先運算資源（進階方案）</div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#C0C5CC"><svg width="14" height="14" fill="none" stroke="#C0C5CC" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>團隊共享空間（進階方案）</div>
+          </div>
+          <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border)">
+            <button style="width:100%;padding:9px;border-radius:6px;border:1.5px solid var(--acc);background:transparent;color:var(--acc);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s" onmouseover="this.style.background='var(--done-bg)'" onmouseout="this.style.background='transparent'">升級至進階方案 →</button>
+          </div>
+        </div>
+
+        <!-- 用量 & 配額 -->
+        <div class="card">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px">
+            <svg width="16" height="16" fill="none" stroke="var(--acc)" stroke-width="2" viewBox="0 0 24 24">
+              <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+              <circle cx="3" cy="6" r=".7" fill="var(--acc)"/><circle cx="3" cy="12" r=".7" fill="var(--acc)"/><circle cx="3" cy="18" r=".7" fill="var(--acc)"/>
+            </svg>
+            <span style="font-size:15px;font-weight:600">用量 &amp; 配額</span>
+          </div>
+          <!-- 總儲存空間 -->
+          <div style="margin-bottom:18px">
+            <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px">
+              <svg width="14" height="14" fill="none" stroke="var(--sub)" stroke-width="1.8" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+              <span style="font-size:13px;flex:1">總儲存空間</span>
+              <span style="font-size:13px;font-weight:500">23.4 GB <span style="color:#C0C5CC">／ -- GB</span></span>
+            </div>
+            <div style="height:6px;background:#C8EDE7;border-radius:3px;overflow:hidden"><div style="height:100%;width:0%;background:var(--acc);border-radius:3px"></div></div>
+            <div style="display:flex;justify-content:space-between;font-size:11.5px;color:var(--sub);margin-top:4px">
+              <span>相片 23.4 GB ／ 建模 0 B</span><span style="color:#C0C5CC">--%</span>
+            </div>
+          </div>
+          <!-- 建模數量 -->
+          <div style="margin-bottom:18px">
+            <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px">
+              <svg width="14" height="14" fill="none" stroke="var(--sub)" stroke-width="1.8" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+              <span style="font-size:13px;flex:1">建模數量</span>
+              <span style="font-size:13px;font-weight:500">6 <span style="color:#C0C5CC">／ -- 次</span></span>
+            </div>
+            <div style="height:6px;background:#C8EDE7;border-radius:3px;overflow:hidden"><div style="height:100%;width:0%;background:var(--acc);border-radius:3px"></div></div>
+            <div style="display:flex;justify-content:space-between;font-size:11.5px;color:var(--sub);margin-top:4px">
+              <span></span><span style="color:#C0C5CC">--%</span>
+            </div>
+          </div>
+          <!-- 相簿數量 -->
+          <div>
+            <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px">
+              <svg width="14" height="14" fill="none" stroke="var(--sub)" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M3 10h18M8 4l1.5 3M16 4l-1.5 3"/></svg>
+              <span style="font-size:13px;flex:1">相簿數量</span>
+              <span style="font-size:13px;font-weight:500">14 <span style="color:#C0C5CC">／ -- 個</span></span>
+            </div>
+            <div style="height:6px;background:#C8EDE7;border-radius:3px;overflow:hidden"><div style="height:100%;width:0%;background:var(--acc);border-radius:3px"></div></div>
+            <div style="display:flex;justify-content:space-between;font-size:11.5px;color:var(--sub);margin-top:4px">
+              <span></span><span style="color:#C0C5CC">--%</span>
+            </div>
+          </div>
+          <div style="margin-top:18px;padding-top:13px;border-top:1px solid var(--border);font-size:12px;color:#C0C5CC">配額上限由管理員設定後顯示</div>
+        </div>
+      </div>
+
+    </div><!-- end viewUser -->
+
+
+    <!-- ╔══════════════╗ -->
+    <!-- ║  管理員視角   ║ -->
+    <!-- ╚══════════════╝ -->
+    <div class="view" id="viewAdmin">
+
+      <div class="sec"><span class="sec-l">平台概況</span><div class="sec-d"></div></div>
+      <div class="g4">
+        <div class="card"><div class="kl">任務總數</div><div class="kv" style="color:var(--text)">147</div><div class="ks">↑ 23 本月新增</div></div>
+        <div class="card"><div class="kl">執行中</div><div class="kv c-run">5</div><div class="ks">佔用計算資源中</div></div>
+        <div class="card"><div class="kl">本月完成</div><div class="kv c-done">38</div><div class="ks">較上月 ↑ 12%</div></div>
+        <div class="card"><div class="kl">整體失敗率</div><div class="kv" style="color:var(--warn)">4.1%</div><div class="ks">6 個任務需關注</div></div>
+      </div>
+
+      <div class="sec"><span class="sec-l">工作流程品質</span><div class="sec-d"></div></div>
+      <div class="g4" style="grid-template-columns:1fr 1fr 1fr 1fr">
+        <div class="card fc">
+          <div class="fi fi-at"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+          <div><div class="fl">空三失敗率</div><div class="fv">3.2%</div><div class="fd">147 任務・5 個失敗</div></div>
+        </div>
+        <div class="card fc">
+          <div class="fi fi-mod"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 2 19 22 19"/><line x1="12" y1="8" x2="12" y2="13"/></svg></div>
+          <div><div class="fl">模型生成失敗率</div><div class="fv">1.8%</div><div class="fd">空三後・1 個失敗</div></div>
+        </div>
+        <div class="card" style="grid-column:span 2">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div>
+              <div class="fl" style="margin-bottom:4px">全平台影像儲存量</div>
+              <div style="font-size:24px;font-weight:700;color:var(--warn)">1,247<span style="font-size:14px;font-weight:400;color:#C0C5CC"> GB</span></div>
+              <div style="font-size:12px;color:var(--sub);margin-top:5px">累計所有使用者影像庫・可作為計費依據</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:12px;color:var(--sub)">活躍使用者</div>
+              <div style="font-size:24px;font-weight:700;color:var(--at)">12</div>
+              <div style="font-size:11.5px;color:#B0B5BC">本月有任務紀錄</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sec"><span class="sec-l">任務趨勢</span><div class="sec-d"></div></div>
+      <div class="g2">
+        <div class="cc">
+          <div class="ct2">月任務量趨勢</div>
+          <div class="cs2">近 6 個月・完成 vs 失敗</div>
+          <div class="cw"><canvas id="cMon"></canvas></div>
+        </div>
+        <div class="cc" style="display:flex;flex-direction:column">
+          <div class="ct2">任務狀態分布</div>
+          <div class="cs2">全平台累計</div>
+          <div style="flex:1;display:flex;align-items:center;justify-content:center">
+            <div style="width:155px;height:155px"><canvas id="cDon"></canvas></div>
+            <div class="leg">
+              <div class="leg-r"><div class="leg-d" style="background:#CCCCCC"></div>待提交 <strong style="margin-left:4px">12</strong></div>
+              <div class="leg-r"><div class="leg-d" style="background:#D48F1A"></div>執行中 <strong style="margin-left:4px">5</strong></div>
+              <div class="leg-r"><div class="leg-d" style="background:#4CB89E"></div>已完成 <strong style="margin-left:4px">124</strong></div>
+              <div class="leg-r"><div class="leg-d" style="background:#C94040"></div>失敗 <strong style="margin-left:4px">6</strong></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sec"><span class="sec-l">效能分析</span><div class="sec-d"></div></div>
+      <div class="g2">
+        <div class="cc">
+          <div class="ct2">建模時長分布</div>
+          <div class="cs2">影像數 vs 處理時間（小時）・可評估效能基準</div>
+          <div class="cw"><canvas id="cScat"></canvas></div>
+        </div>
+        <div class="cc">
+          <div class="ct2">失敗率趨勢</div>
+          <div class="cs2">近 30 天・空三 vs 模型生成（各自獨立追蹤）</div>
+          <div class="cw"><canvas id="cFail"></canvas></div>
+        </div>
+      </div>
+
+      <div class="sec"><span class="sec-l">即時監控</span><div class="sec-d"></div></div>
+      <div class="card" style="margin-bottom:0">
+        <div style="margin-bottom:14px">
+          <div style="font-size:14px;font-weight:600">全平台執行中任務</div>
+          <div style="font-size:12px;color:var(--sub);margin-top:2px">目前 5 個任務正在運算</div>
+        </div>
+        <table class="tbl">
+          <thead><tr>
+            <th>任務名稱</th><th>使用者</th><th>空中三角重建</th><th>模型生成</th><th>影像數</th><th>已耗時</th>
+          </tr></thead>
+          <tbody>
+            <tr>
+              <td><div class="tn">SITE_A_0623</div></td>
+              <td style="color:var(--sub);font-size:12.5px">john.doe</td>
+              <td class="tprog"><div style="font-size:12px;color:var(--at);font-weight:600;margin-bottom:3px">75%</div><div class="pb-bg"><div class="pb-fill f-at" style="width:75%"></div></div></td>
+              <td class="tprog"><div style="font-size:12px;color:#CCCCCC;margin-bottom:3px">等待中</div><div class="pb-bg"><div class="pb-fill f-mod" style="width:0%"></div></div></td>
+              <td>352</td><td style="color:var(--sub);font-size:12px">5h 23m</td>
+            </tr>
+            <tr>
+              <td><div class="tn">BRIDGE_MODEL_02</div></td>
+              <td style="color:var(--sub);font-size:12.5px">jane.doe</td>
+              <td class="tprog"><div style="font-size:12px;color:var(--done);font-weight:600;margin-bottom:3px">完成 ✓</div><div class="pb-bg"><div class="pb-fill f-at" style="width:100%"></div></div></td>
+              <td class="tprog"><div style="font-size:12px;color:var(--acc);font-weight:600;margin-bottom:3px">42%</div><div class="pb-bg"><div class="pb-fill f-mod" style="width:42%"></div></div></td>
+              <td>891</td><td style="color:var(--sub);font-size:12px">11h 05m</td>
+            </tr>
+            <tr>
+              <td><div class="tn">FARM_ORTHO_0619</div></td>
+              <td style="color:var(--sub);font-size:12.5px">alex.doe</td>
+              <td class="tprog"><div style="font-size:12px;color:var(--at);font-weight:600;margin-bottom:3px">23%</div><div class="pb-bg"><div class="pb-fill f-at" style="width:23%"></div></div></td>
+              <td class="tprog"><div style="font-size:12px;color:#CCCCCC;margin-bottom:3px">等待中</div><div class="pb-bg"><div class="pb-fill f-mod" style="width:0%"></div></div></td>
+              <td>1,205</td><td style="color:var(--sub);font-size:12px">2h 41m</td>
+            </tr>
+            <tr>
+              <td><div class="tn">ROAD_SURVEY_N3</div></td>
+              <td style="color:var(--sub);font-size:12.5px">casey.doe</td>
+              <td class="tprog"><div style="font-size:12px;color:var(--done);font-weight:600;margin-bottom:3px">完成 ✓</div><div class="pb-bg"><div class="pb-fill f-at" style="width:100%"></div></div></td>
+              <td class="tprog"><div style="font-size:12px;color:var(--acc);font-weight:600;margin-bottom:3px">88%</div><div class="pb-bg"><div class="pb-fill f-mod" style="width:88%"></div></div></td>
+              <td>643</td><td style="color:var(--sub);font-size:12px">8h 51m</td>
+            </tr>
+            <tr>
+              <td><div class="tn">RESERVOIR_3D</div></td>
+              <td style="color:var(--sub);font-size:12.5px">taylor.doe</td>
+              <td class="tprog"><div style="font-size:12px;color:var(--at);font-weight:600;margin-bottom:3px">57%</div><div class="pb-bg"><div class="pb-fill f-at" style="width:57%"></div></div></td>
+              <td class="tprog"><div style="font-size:12px;color:#CCCCCC;margin-bottom:3px">等待中</div><div class="pb-bg"><div class="pb-fill f-mod" style="width:0%"></div></div></td>
+              <td>478</td><td style="color:var(--sub);font-size:12px">3h 19m</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div><!-- end viewAdmin -->
+  </div><!-- end ct -->
+</main>
+
+<script>
+function setRole(r){
+  document.getElementById('btnUser').classList.toggle('on',r==='user');
+  document.getElementById('btnAdmin').classList.toggle('on',r==='admin');
+  document.getElementById('viewUser').classList.toggle('active',r==='user');
+  document.getElementById('viewAdmin').classList.toggle('active',r==='admin');
+  document.getElementById('refBtn').style.display=r==='admin'?'flex':'none';
+
+}
+function doRef(){
+  const n=new Date(),p=x=>String(x).padStart(2,'0');
+  document.getElementById('updT').textContent=`最後更新：${n.getFullYear()}/${p(n.getMonth()+1)}/${p(n.getDate())} ${p(n.getHours())}:${p(n.getMinutes())}`;
+}
+
+Chart.defaults.font.family="-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang TC',sans-serif";
+Chart.defaults.font.size=12;
+Chart.defaults.color='#B0B5BC';
+
+new Chart(document.getElementById('cMon'),{
+  type:'bar',
+  data:{labels:['1月','2月','3月','4月','5月','6月'],datasets:[
+    {label:'完成',data:[18,22,19,31,34,38],backgroundColor:'#72C8AF',borderRadius:3,barPercentage:.6},
+    {label:'失敗',data:[1,2,1,3,2,3],backgroundColor:'#F0B8B8',borderRadius:3,barPercentage:.6}
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{position:'top',labels:{boxWidth:9,padding:12}}},
+    scales:{x:{grid:{display:false},border:{display:false}},y:{grid:{color:'#F0F0F0'},border:{display:false},beginAtZero:true}}
+  }
+});
+
+new Chart(document.getElementById('cDon'),{
+  type:'doughnut',
+  data:{labels:['待提交','執行中','已完成','失敗'],
+    datasets:[{data:[12,5,124,6],backgroundColor:['#CCCCCC','#D48F1A','#4CB89E','#C94040'],borderWidth:0,hoverOffset:3}]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.label}：${c.raw} 個`}}},cutout:'68%'}
+});
+
+new Chart(document.getElementById('cScat'),{
+  type:'scatter',
+  data:{datasets:[{label:'建模任務',
+    data:[{x:100,y:1.2},{x:148,y:1.9},{x:200,y:2.5},{x:255,y:3.2},{x:310,y:4.1},{x:352,y:5.0},{x:410,y:6.0},{x:478,y:6.8},{x:540,y:7.9},{x:643,y:9.4},{x:720,y:11.5},{x:820,y:13.2},{x:891,y:14.8},{x:980,y:17.6},{x:1205,y:21.8},{x:175,y:2.2},{x:290,y:3.8},{x:530,y:8.1},{x:780,y:12.4},{x:1100,y:19.3}],
+    backgroundColor:'rgba(91,109,184,0.5)',pointRadius:5}]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`影像 ${c.raw.x} 張・${c.raw.y}h`}}},
+    scales:{x:{title:{display:true,text:'影像數（張）',font:{size:11}},grid:{color:'#F0F0F0'},border:{display:false}},
+      y:{title:{display:true,text:'處理時間（h）',font:{size:11}},grid:{color:'#F0F0F0'},border:{display:false}}}}
+});
+
+const d30=Array.from({length:30},(_,i)=>{const d=new Date('2026-05-25');d.setDate(d.getDate()+i);return `${d.getMonth()+1}/${d.getDate()}`});
+new Chart(document.getElementById('cFail'),{
+  type:'line',
+  data:{labels:d30,datasets:[
+    {label:'空三失敗率',data:[0,0,5,0,0,10,0,0,0,5,0,0,15,0,0,5,0,0,10,0,0,5,0,0,0,10,0,0,5,0],borderColor:'#5B6DB8',backgroundColor:'rgba(91,109,184,.07)',tension:.3,pointRadius:2,fill:true},
+    {label:'模型生成失敗率',data:[0,0,0,0,5,0,0,0,0,0,0,5,0,0,0,0,0,0,5,0,0,0,0,0,5,0,0,0,0,0],borderColor:'#4CB89E',backgroundColor:'rgba(76,184,158,.06)',tension:.3,pointRadius:2,fill:true}
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{position:'top',labels:{boxWidth:9,padding:12}}},
+    scales:{x:{grid:{display:false},border:{display:false},ticks:{maxTicksLimit:7}},
+      y:{grid:{color:'#F0F0F0'},border:{display:false},beginAtZero:true,ticks:{callback:v=>v+'%'}}}}
+});
+</script>
+</body>
+</html>
