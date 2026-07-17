@@ -168,6 +168,12 @@ body{
 .leg-r{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text)}
 .leg-d{width:9px;height:9px;border-radius:2px;flex-shrink:0}
 
+/* ══ 即時監控 Tabs ══ */
+.mon-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}
+.mon-tabs{display:flex;gap:6px;background:var(--page);border:1px solid var(--border);border-radius:7px;padding:3px;flex-shrink:0}
+.mon-tab{border:0;background:transparent;color:var(--sub);border-radius:5px;padding:6px 11px;font-size:12.5px;cursor:pointer}
+.mon-tab.on{background:#fff;color:var(--text);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+
 /* ══ 視角切換 ══ */
 .view{display:none}
 .view.active{display:block}
@@ -273,7 +279,7 @@ body{
           </tr></thead>
           <tbody>
             <tr>
-              <td><div class="tn">SITE_A_0623</div><div class="tsub">TEST 相簿</div></td>
+              <td><div class="tn">SITE_A_0623</div><div class="tsub">TEST 專案資料夾</div></td>
               <td style="min-width:280px">
                 <div class="prog-block"><div class="prog-row">
                   <div class="prog-item">
@@ -289,7 +295,7 @@ body{
               <td>352</td><td style="color:var(--sub);font-size:12px">06/23 09:12</td><td style="color:var(--sub);font-size:12px">5h 23m</td>
             </tr>
             <tr>
-              <td><div class="tn">MOUNTAIN_3D_0620</div><div class="tsub">北部測區 相簿</div></td>
+              <td><div class="tn">MOUNTAIN_3D_0620</div><div class="tsub">北部測區 專案資料夾</div></td>
               <td style="min-width:280px">
                 <div class="prog-block"><div class="prog-row">
                   <div class="prog-item">
@@ -305,7 +311,7 @@ body{
               <td>614</td><td style="color:var(--sub);font-size:12px">06/20 14:30</td><td style="color:var(--sub);font-size:12px">3天 2h</td>
             </tr>
             <tr>
-              <td><div class="tn">COAST_SURVEY_07</div><div class="tsub">西部沿海 相簿</div></td>
+              <td><div class="tn">COAST_SURVEY_07</div><div class="tsub">西部沿海 專案資料夾</div></td>
               <td style="min-width:280px">
                 <div class="prog-block"><div class="prog-row">
                   <div class="prog-item">
@@ -327,12 +333,24 @@ body{
       <!-- 儲存用量 -->
       <div class="card g1">
         <div style="font-size:14px;font-weight:600;margin-bottom:3px">儲存用量</div>
-        <div style="font-size:12px;color:var(--sub);margin-bottom:14px">影像庫實際佔用空間</div>
-        <div style="font-size:30px;font-weight:700;color:var(--warn)">
-          <span style="font-size:14px;font-weight:500;color:var(--sub)">已使用</span>&nbsp;23.4
-          <span style="font-size:14px;font-weight:400;color:#C0C5CC">GB</span>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:14px">
+          <div>
+            <div style="font-size:12px;color:var(--sub);margin-bottom:14px">影像庫實際佔用空間</div>
+            <div style="font-size:30px;font-weight:700;color:var(--warn)">
+              <span style="font-size:14px;font-weight:500;color:var(--sub)">已使用</span>&nbsp;23.4
+              <span style="font-size:14px;font-weight:400;color:#C0C5CC">GB</span>
+            </div>
+            <div style="font-size:12px;color:var(--sub);margin-top:7px">共 847 張影像・14 個相簿</div>
+          </div>
+          <div style="border-left:1px solid var(--border);padding-left:28px">
+            <div style="font-size:12px;color:var(--sub);margin-bottom:14px">建模成果實際佔用空間</div>
+            <div style="font-size:30px;font-weight:700;color:var(--acc)">
+              <span style="font-size:14px;font-weight:500;color:var(--sub)">已使用</span>&nbsp;11.8
+              <span style="font-size:14px;font-weight:400;color:#C0C5CC">GB</span>
+            </div>
+            <div style="font-size:12px;color:var(--sub);margin-top:7px">共 18 個模型・6 個任務成果</div>
+          </div>
         </div>
-        <div style="font-size:12px;color:var(--sub);margin-top:7px">共 847 張影像・14 個相簿</div>
       </div>
 
       <!-- 我的方案 -->
@@ -411,7 +429,6 @@ body{
               <span></span><span style="color:#C0C5CC">--%</span>
             </div>
           </div>
-          <div style="margin-top:18px;padding-top:13px;border-top:1px solid var(--border);font-size:12px;color:#C0C5CC">配額上限由管理員設定後顯示</div>
         </div>
       </div>
 
@@ -495,51 +512,22 @@ body{
 
       <div class="sec"><span class="sec-l">即時監控</span><div class="sec-d"></div></div>
       <div class="card" style="margin-bottom:0">
-        <div style="margin-bottom:14px">
-          <div style="font-size:14px;font-weight:600">全平台執行中任務</div>
-          <div style="font-size:12px;color:var(--sub);margin-top:2px">目前 5 個任務正在運算</div>
+        <div class="mon-head">
+          <div>
+            <div style="font-size:14px;font-weight:600">全平台任務監控</div>
+            <div style="font-size:12px;color:var(--sub);margin-top:2px" id="monitorDesc">最新任務・依任務開始時間排序</div>
+          </div>
+          <div class="mon-tabs">
+            <button class="mon-tab on" data-monitor-tab="latest">最新任務</button>
+            <button class="mon-tab" data-monitor-tab="images">使用影像數</button>
+            <button class="mon-tab" data-monitor-tab="duration">任務耗時</button>
+          </div>
         </div>
         <table class="tbl">
           <thead><tr>
-            <th>任務名稱</th><th>使用者</th><th>空中三角重建</th><th>模型生成</th><th>影像數</th><th>已耗時</th>
+            <th>任務名稱</th><th>使用者</th><th>任務開始時間</th><th>空中三角重建</th><th>模型生成</th><th>影像數</th><th>已耗時</th>
           </tr></thead>
-          <tbody>
-            <tr>
-              <td><div class="tn">SITE_A_0623</div></td>
-              <td style="color:var(--sub);font-size:12.5px">john.doe</td>
-              <td class="tprog"><div style="font-size:12px;color:var(--at);font-weight:600;margin-bottom:3px">75%</div><div class="pb-bg"><div class="pb-fill f-at" style="width:75%"></div></div></td>
-              <td class="tprog"><div style="font-size:12px;color:#CCCCCC;margin-bottom:3px">等待中</div><div class="pb-bg"><div class="pb-fill f-mod" style="width:0%"></div></div></td>
-              <td>352</td><td style="color:var(--sub);font-size:12px">5h 23m</td>
-            </tr>
-            <tr>
-              <td><div class="tn">BRIDGE_MODEL_02</div></td>
-              <td style="color:var(--sub);font-size:12.5px">jane.doe</td>
-              <td class="tprog"><div style="font-size:12px;color:var(--done);font-weight:600;margin-bottom:3px">完成 ✓</div><div class="pb-bg"><div class="pb-fill f-at" style="width:100%"></div></div></td>
-              <td class="tprog"><div style="font-size:12px;color:var(--acc);font-weight:600;margin-bottom:3px">42%</div><div class="pb-bg"><div class="pb-fill f-mod" style="width:42%"></div></div></td>
-              <td>891</td><td style="color:var(--sub);font-size:12px">11h 05m</td>
-            </tr>
-            <tr>
-              <td><div class="tn">FARM_ORTHO_0619</div></td>
-              <td style="color:var(--sub);font-size:12.5px">alex.doe</td>
-              <td class="tprog"><div style="font-size:12px;color:var(--at);font-weight:600;margin-bottom:3px">23%</div><div class="pb-bg"><div class="pb-fill f-at" style="width:23%"></div></div></td>
-              <td class="tprog"><div style="font-size:12px;color:#CCCCCC;margin-bottom:3px">等待中</div><div class="pb-bg"><div class="pb-fill f-mod" style="width:0%"></div></div></td>
-              <td>1,205</td><td style="color:var(--sub);font-size:12px">2h 41m</td>
-            </tr>
-            <tr>
-              <td><div class="tn">ROAD_SURVEY_N3</div></td>
-              <td style="color:var(--sub);font-size:12.5px">casey.doe</td>
-              <td class="tprog"><div style="font-size:12px;color:var(--done);font-weight:600;margin-bottom:3px">完成 ✓</div><div class="pb-bg"><div class="pb-fill f-at" style="width:100%"></div></div></td>
-              <td class="tprog"><div style="font-size:12px;color:var(--acc);font-weight:600;margin-bottom:3px">88%</div><div class="pb-bg"><div class="pb-fill f-mod" style="width:88%"></div></div></td>
-              <td>643</td><td style="color:var(--sub);font-size:12px">8h 51m</td>
-            </tr>
-            <tr>
-              <td><div class="tn">RESERVOIR_3D</div></td>
-              <td style="color:var(--sub);font-size:12.5px">taylor.doe</td>
-              <td class="tprog"><div style="font-size:12px;color:var(--at);font-weight:600;margin-bottom:3px">57%</div><div class="pb-bg"><div class="pb-fill f-at" style="width:57%"></div></div></td>
-              <td class="tprog"><div style="font-size:12px;color:#CCCCCC;margin-bottom:3px">等待中</div><div class="pb-bg"><div class="pb-fill f-mod" style="width:0%"></div></div></td>
-              <td>478</td><td style="color:var(--sub);font-size:12px">3h 19m</td>
-            </tr>
-          </tbody>
+          <tbody id="monitorRows"></tbody>
         </table>
       </div>
 
@@ -560,6 +548,50 @@ function doRef(){
   const n=new Date(),p=x=>String(x).padStart(2,'0');
   document.getElementById('updT').textContent=`最後更新：${n.getFullYear()}/${p(n.getMonth()+1)}/${p(n.getDate())} ${p(n.getHours())}:${p(n.getMinutes())}`;
 }
+
+const monitorTasks=[
+  {name:'SITE_A_0623',user:'john.doe',startedAt:'2026/06/23 09:12',atLabel:'75%',atPct:75,atDone:false,modelLabel:'等待中',modelPct:0,images:352,duration:'5h 23m',durationHours:5.38},
+  {name:'BRIDGE_MODEL_02',user:'jane.doe',startedAt:'2026/06/22 22:17',atLabel:'完成 ✓',atPct:100,atDone:true,modelLabel:'42%',modelPct:42,images:891,duration:'11h 05m',durationHours:11.08},
+  {name:'FARM_ORTHO_0619',user:'alex.doe',startedAt:'2026/06/23 13:05',atLabel:'23%',atPct:23,atDone:false,modelLabel:'等待中',modelPct:0,images:1205,duration:'2h 41m',durationHours:2.68},
+  {name:'ROAD_SURVEY_N3',user:'casey.doe',startedAt:'2026/06/21 18:36',atLabel:'完成 ✓',atPct:100,atDone:true,modelLabel:'88%',modelPct:88,images:643,duration:'8h 51m',durationHours:8.85},
+  {name:'RESERVOIR_3D',user:'taylor.doe',startedAt:'2026/06/23 11:46',atLabel:'57%',atPct:57,atDone:false,modelLabel:'等待中',modelPct:0,images:478,duration:'3h 19m',durationHours:3.32},
+  {name:'HARBOR_SCAN_12',user:'morgan.doe',startedAt:'2026/06/22 07:58',atLabel:'完成 ✓',atPct:100,atDone:true,modelLabel:'61%',modelPct:61,images:1038,duration:'14h 22m',durationHours:14.37},
+  {name:'FOREST_PATCH_B',user:'riley.doe',startedAt:'2026/06/23 14:22',atLabel:'18%',atPct:18,atDone:false,modelLabel:'等待中',modelPct:0,images:286,duration:'1h 12m',durationHours:1.2}
+];
+
+function renderProgress(label,pct,type,done){
+  const color = done ? 'var(--done)' : type === 'at' ? 'var(--at)' : 'var(--acc)';
+  return `<td class="tprog"><div style="font-size:12px;color:${color};font-weight:600;margin-bottom:3px">${label}</div><div class="pb-bg"><div class="pb-fill ${type === 'at' ? 'f-at' : 'f-mod'}" style="width:${pct}%"></div></div></td>`;
+}
+
+function renderMonitor(tab='latest'){
+  const desc={
+    latest:'最新任務・依任務開始時間排序',
+    images:'使用影像數・依影像數排序',
+    duration:'任務耗時・依已耗時排序'
+  };
+  const sorters={
+    latest:(a,b)=>new Date(b.startedAt.replace(' ','T'))-new Date(a.startedAt.replace(' ','T')),
+    images:(a,b)=>b.images-a.images,
+    duration:(a,b)=>b.durationHours-a.durationHours
+  };
+  document.getElementById('monitorDesc').textContent=desc[tab];
+  document.querySelectorAll('.mon-tab').forEach(btn=>btn.classList.toggle('on',btn.dataset.monitorTab===tab));
+  document.getElementById('monitorRows').innerHTML=[...monitorTasks].sort(sorters[tab]).slice(0,5).map(task=>`
+    <tr>
+      <td><div class="tn">${task.name}</div></td>
+      <td style="color:var(--sub);font-size:12.5px">${task.user}</td>
+      <td style="color:var(--sub);font-size:12px">${task.startedAt}</td>
+      ${renderProgress(task.atLabel,task.atPct,'at',task.atDone)}
+      ${renderProgress(task.modelLabel,task.modelPct,'model',false)}
+      <td>${task.images.toLocaleString()}</td>
+      <td style="color:var(--sub);font-size:12px">${task.duration}</td>
+    </tr>
+  `).join('');
+}
+
+document.querySelectorAll('.mon-tab').forEach(btn=>btn.addEventListener('click',()=>renderMonitor(btn.dataset.monitorTab)));
+renderMonitor();
 
 Chart.defaults.font.family="-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang TC',sans-serif";
 Chart.defaults.font.size=12;
